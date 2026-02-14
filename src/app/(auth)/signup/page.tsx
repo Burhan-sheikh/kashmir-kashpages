@@ -1,7 +1,60 @@
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/lib/auth/auth-context';
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SignupPage() {
+  const { signUp, signInWithGoogle } = useAuth();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await signUp(formData.email, formData.password, formData.name);
+      toast({
+        title: 'Success',
+        description: 'Account created successfully',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignup = async () => {
+    setLoading(true);
+    try {
+      await signInWithGoogle();
+      toast({
+        title: 'Success',
+        description: 'Signed up with Google successfully',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/50">
       <div className="w-full max-w-md space-y-8 rounded-lg border bg-background p-8 shadow-sm">
@@ -12,7 +65,7 @@ export default function SignupPage() {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6">
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium mb-2">
@@ -24,6 +77,8 @@ export default function SignupPage() {
                 type="text"
                 autoComplete="name"
                 required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="John Doe"
               />
@@ -39,6 +94,8 @@ export default function SignupPage() {
                 type="email"
                 autoComplete="email"
                 required
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="you@example.com"
               />
@@ -54,12 +111,13 @@ export default function SignupPage() {
                 type="password"
                 autoComplete="new-password"
                 required
+                minLength={8}
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className="w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="••••••••"
               />
-              <p className="mt-1 text-xs text-muted-foreground">
-                Must be at least 8 characters
-              </p>
+              <p className="mt-1 text-xs text-muted-foreground">Must be at least 8 characters</p>
             </div>
           </div>
 
@@ -83,8 +141,8 @@ export default function SignupPage() {
             </label>
           </div>
 
-          <Button type="submit" className="w-full">
-            Create account
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? 'Creating account...' : 'Create account'}
           </Button>
         </form>
 
@@ -97,7 +155,13 @@ export default function SignupPage() {
           </div>
         </div>
 
-        <Button variant="outline" className="w-full" type="button">
+        <Button
+          variant="outline"
+          className="w-full"
+          type="button"
+          onClick={handleGoogleSignup}
+          disabled={loading}
+        >
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
             <path
               fill="currentColor"

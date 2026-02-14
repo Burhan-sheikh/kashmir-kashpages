@@ -1,7 +1,57 @@
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/lib/auth/auth-context';
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
+  const { signIn, signInWithGoogle } = useAuth();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await signIn(email, password);
+      toast({
+        title: 'Success',
+        description: 'Signed in successfully',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      await signInWithGoogle();
+      toast({
+        title: 'Success',
+        description: 'Signed in with Google successfully',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/50">
       <div className="w-full max-w-md space-y-8 rounded-lg border bg-background p-8 shadow-sm">
@@ -12,7 +62,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6">
+        <form onSubmit={handleEmailLogin} className="mt-8 space-y-6">
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium mb-2">
@@ -24,6 +74,8 @@ export default function LoginPage() {
                 type="email"
                 autoComplete="email"
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="you@example.com"
               />
@@ -39,6 +91,8 @@ export default function LoginPage() {
                 type="password"
                 autoComplete="current-password"
                 required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="••••••••"
               />
@@ -65,8 +119,8 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full">
-            Sign in
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? 'Signing in...' : 'Sign in'}
           </Button>
         </form>
 
@@ -79,7 +133,13 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <Button variant="outline" className="w-full" type="button">
+        <Button
+          variant="outline"
+          className="w-full"
+          type="button"
+          onClick={handleGoogleLogin}
+          disabled={loading}
+        >
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
             <path
               fill="currentColor"
